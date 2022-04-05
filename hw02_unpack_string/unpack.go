@@ -48,7 +48,11 @@ func Unpack(stringForUnpack string) (string, error) {
 
 		// Выводит текущий символ один или несколько раз
 		if unicode.IsDigit(nextRune) {
-			numberOfRepeats, _ := strconv.Atoi(string(nextRune))
+			numberOfRepeats, err := strconv.Atoi(string(nextRune))
+			if err != nil {
+				return "", err
+			}
+
 			for i := 0; i < numberOfRepeats; i++ {
 				resultBuilder.WriteRune(thisRune)
 			}
