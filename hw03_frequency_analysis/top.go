@@ -31,12 +31,7 @@ func calcFrequencyOfWords(words []string) frequencyOfWordsMap {
 		if word == "" {
 			continue
 		}
-		_, ok := result[word]
-		if ok {
-			result[word]++
-		} else {
-			result[word] = 1
-		}
+		result[word]++
 	}
 
 	return result
@@ -68,5 +63,5 @@ func getSliceByMaxLen(uniqWords []string, maxLen int) []string {
 		return uniqWords[0:maxLen]
 	}
 
-	return uniqWords[0:]
+	return uniqWords[:]
 }
