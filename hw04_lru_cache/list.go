@@ -31,25 +31,16 @@ func (l *list) Len() int {
 }
 
 func (l *list) Front() *ListItem {
-	if l.countOfItems == 0 {
-		return nil
-	}
-
 	return l.frontItem
 }
 
 func (l *list) Back() *ListItem {
-
-	if l.countOfItems == 0 {
-		return nil
-	}
-
 	return l.backItem
 }
 
 func (l *list) PushFront(v interface{}) *ListItem {
 	frontItem := l.frontItem
-	l.frontItem = &ListItem{v, frontItem, nil}
+	l.frontItem = &ListItem{Value: v, Next: frontItem, Prev: nil}
 
 	if frontItem != nil {
 		frontItem.Prev = l.frontItem
@@ -60,9 +51,7 @@ func (l *list) PushFront(v interface{}) *ListItem {
 	}
 
 	if l.countOfItems == 1 {
-		if l.backItem != nil {
-			l.backItem.Prev = l.frontItem
-		}
+		l.backItem.Prev = l.frontItem
 	}
 
 	l.countOfItems++
@@ -72,7 +61,7 @@ func (l *list) PushFront(v interface{}) *ListItem {
 
 func (l *list) PushBack(v interface{}) *ListItem {
 	backItem := l.backItem
-	l.backItem = &ListItem{v, nil, backItem}
+	l.backItem = &ListItem{Value: v, Next: nil, Prev: backItem}
 
 	if backItem != nil {
 		backItem.Next = l.backItem
@@ -92,50 +81,31 @@ func (l *list) PushBack(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
-
 	if l.countOfItems > 0 {
 		l.countOfItems--
 	}
 
-	if l.frontItem == i {
-		l.frontItem = i.Next
-		if l.frontItem != nil {
-			l.frontItem.Next = nil
-		}
+	if l.countOfItems == 0 {
+		l.frontItem = nil
+		l.backItem = nil
+
 		return
 	}
 
-	if l.backItem == i {
-		l.backItem = i.Prev
-		if l.backItem != nil {
-			l.backItem.Next = nil
-		}
-		return
+	if i.Prev != nil {
+		i.Prev.Next = i.Next
+	} else {
+		l.frontItem = l.frontItem.Next
 	}
 
-	i.Prev.Next = i.Next
-	i.Next.Prev = i.Prev
+	if i.Next != nil {
+		i.Next.Prev = i.Prev
+	} else {
+		l.backItem = l.backItem.Prev
+	}
 }
 
 func (l *list) MoveToFront(movableElement *ListItem) {
-
-	leftElement := movableElement.Prev
-	rightElement := movableElement.Next
-
-	if leftElement == nil {
-		return
-	}
-
-	movableElement.Prev = nil
-	movableElement.Next = l.frontItem
-
-	l.frontItem = movableElement
-	if rightElement == nil {
-		l.backItem = leftElement
-	}
-
-	leftElement.Next = rightElement
-	if rightElement != nil {
-		rightElement.Prev = leftElement
-	}
+	l.Remove(movableElement)
+	l.PushFront(movableElement.Value)
 }

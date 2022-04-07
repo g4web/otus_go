@@ -54,8 +54,9 @@ func TestCache(t *testing.T) {
 		c.Set("aaa", 100)
 		c.Set("bbb", 200)
 		c.Set("ccc", 300)
-		_, ok := c.Get("aaa")
+		val, ok := c.Get("aaa")
 		require.False(t, ok)
+		require.Equal(t, nil, val)
 	})
 
 	t.Run("delete unuseful", func(t *testing.T) {
