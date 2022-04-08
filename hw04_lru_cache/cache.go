@@ -28,7 +28,6 @@ func NewCache(capacity int) Cache {
 }
 
 func (l *lruCache) Set(key Key, value interface{}) bool {
-
 	item, wasInCache := l.items[key]
 	if wasInCache {
 		updateValue(key, value, item, l)
@@ -43,12 +42,8 @@ func (l *lruCache) Get(key Key) (interface{}, bool) {
 	item, wasInCache := l.items[key]
 	if wasInCache {
 		l.queue.MoveToFront(item)
-		switch cacheItemVal := item.Value.(type) {
-		case cacheItem:
-			return cacheItemVal.value, wasInCache
-		default:
-			//что делать, бросать ошибку? Правильным было бы конкретизировать интерфейс для ListItem.Value, а не вот это вот все
-		}
+
+		return item.Value.(cacheItem).value, wasInCache
 	}
 
 	return nil, wasInCache
@@ -79,10 +74,6 @@ func pushValue(key Key, value interface{}, l *lruCache) {
 func deleteOldestItem(l *lruCache) {
 	itemForDel := l.queue.Back()
 	l.queue.Remove(itemForDel)
-	switch cacheItemVal := itemForDel.Value.(type) {
-	case cacheItem:
-		delete(l.items, cacheItemVal.key)
-	default:
-		//что делать, бросать ошибку? Правильным было бы конкретизировать интерфейс для ListItem.Value, а не вот это вот все
-	}
+
+	delete(l.items, itemForDel.Value.(cacheItem).key)
 }

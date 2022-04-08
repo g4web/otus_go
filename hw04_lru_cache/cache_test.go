@@ -63,9 +63,9 @@ func TestCache(t *testing.T) {
 		c := NewCache(2)
 		c.Set("aaa", 100)
 		c.Set("bbb", 200)
-		_, ok := c.Get("aaa")
+		c.Get("aaa")
 		c.Set("ccc", 300)
-		_, ok = c.Get("bbb")
+		_, ok := c.Get("bbb")
 		require.False(t, ok)
 	})
 
