@@ -22,7 +22,10 @@ func TestPipeline(t *testing.T) {
 				defer close(out)
 				for v := range in {
 					time.Sleep(sleepPerStage)
-					out <- f(v)
+					out <- f(v) // Dummy:                1, 2, 3, 4, 5
+					// out <- f(v) //Multiplier (* 2):   2, 4, 6, 8, 10
+					// out <- f(v) //Adder (+ 100):      102, 104, 106, 108, 110
+					// out <- f(v) //Stringifier:        "102", "104", "106", "108", "110"
 				}
 			}()
 			return out
@@ -89,5 +92,32 @@ func TestPipeline(t *testing.T) {
 
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("done in the beginning case", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		done := make(Bi)
+		close(done)
+
+		result := make([]string, 0, 10)
+		start := time.Now()
+		for s := range ExecutePipeline(in, done, stages...) {
+			result = append(result, s.(string))
+		}
+		elapsed := time.Since(start)
+
+		require.Equal(t, []string{}, result)
+		require.Less(t,
+			int64(elapsed),
+			int64(fault))
 	})
 }
