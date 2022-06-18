@@ -88,7 +88,8 @@ func validateProperty(
 	var validationErrors ValidationErrors
 	var err error
 
-	switch property.Type.Kind() {
+	// Без nolint получаю ошибку аля "не обработаны кейсы для: Array, Bool, Chan etc". Другое решение в первом коммите
+	switch property.Type.Kind() { //nolint
 	case reflect.Slice:
 		propertyVal := reflectedStruct.Field(i)
 		validationErrors, err = validateSlice(property.Name, propertyVal, rules)
@@ -98,11 +99,6 @@ func validateProperty(
 	case reflect.String:
 		propertyVal := reflectedStruct.Field(i).String()
 		validationErrors, err = validateString(property.Name, propertyVal, rules)
-	case reflect.Array, reflect.Bool, reflect.Chan, reflect.Complex128, reflect.Complex64, reflect.Float32,
-		reflect.Float64, reflect.Func, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int8, reflect.Interface,
-		reflect.Invalid, reflect.Map, reflect.Pointer, reflect.Struct, reflect.Uint, reflect.Uint16, reflect.Uint32,
-		reflect.Uint64, reflect.Uint8, reflect.Uintptr, reflect.UnsafePointer:
-		err = ErrUnsupportedPropertyType
 	default:
 		err = ErrUnsupportedPropertyType
 	}
