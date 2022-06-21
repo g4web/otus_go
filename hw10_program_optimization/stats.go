@@ -2,47 +2,43 @@ package hw10programoptimization
 
 import (
 	"bufio"
+	"errors"
 	"io"
-	"log"
 	"strings"
-)
 
-type User struct {
-	ID       int
-	Name     string
-	Username string
-	Email    string
-	Phone    string
-	Password string
-	Address  string
-}
+	"github.com/valyala/fastjson"
+)
 
 type DomainStat map[string]int
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	scanner := bufio.NewScanner(r)
+	reader := bufio.NewReader(r)
 
 	result := make(DomainStat)
 
-	for scanner.Scan() {
-		separatedByFirstLevelDomain := strings.SplitN(scanner.Text(), "."+domain, 2)
-		hasRequiredDomain := len(separatedByFirstLevelDomain) == 1
-		if hasRequiredDomain {
+	for {
+		lineBytes, _, err := reader.ReadLine()
+
+		if errors.Is(err, io.EOF) {
+			return result, nil
+		}
+
+		if err != nil {
+			return result, err
+		}
+
+		userEmail := fastjson.GetString(lineBytes, "Email")
+
+		hasRequiredDomain := strings.HasSuffix(userEmail, "."+domain)
+		if !hasRequiredDomain {
 			continue
 		}
 
-		separatedByEt := strings.SplitN(separatedByFirstLevelDomain[0], "@", 2)
+		separatedByEt := strings.SplitN(userEmail, "@", 2)
 		secondLevelDomain := strings.ToLower(separatedByEt[1])
-		fullDomain := secondLevelDomain + "." + domain
 
-		num := result[fullDomain]
+		num := result[secondLevelDomain]
 		num++
-		result[fullDomain] = num
+		result[secondLevelDomain] = num
 	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return result, nil
 }
