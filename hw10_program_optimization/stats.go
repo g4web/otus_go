@@ -37,8 +37,6 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 		separatedByEt := strings.SplitN(userEmail, "@", 2)
 		secondLevelDomain := strings.ToLower(separatedByEt[1])
 
-		num := result[secondLevelDomain]
-		num++
-		result[secondLevelDomain] = num
+		result[secondLevelDomain]++
 	}
 }
