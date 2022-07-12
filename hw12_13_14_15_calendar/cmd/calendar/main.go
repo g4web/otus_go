@@ -2,22 +2,28 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/g4web/otus_go/hw12_13_14_15_calendar/configs"
+	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage"
+	memorystorage "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage/sql"
+
+	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/app"
+	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/server/http"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "./configs/config.env", "Path to configuration file")
 }
 
 func main() {
@@ -28,13 +34,22 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	config, err := configs.NewConfig(configFile)
+	if err != nil {
+		log.Fatalf("error reading config: %v", err)
+	}
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	logg := logger.New(config.LogLevel, config.LogFile)
+	defer logg.Close()
 
-	server := internalhttp.NewServer(logg, calendar)
+	eventStorage, err := getStorage(config)
+	if err != nil {
+		logg.Error(err.Error())
+	}
+
+	calendar := app.New(logg, eventStorage)
+
+	server := internalhttp.NewServer(logg, calendar, config)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -57,5 +72,16 @@ func main() {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
+	}
+}
+
+func getStorage(c *configs.Config) (storage.EventStorage, error) {
+	switch c.StorageType {
+	case "memory":
+		return memorystorage.New(), nil
+	case "postgres":
+		return sqlstorage.New(c)
+	default:
+		return nil, errors.New("Unsupported storage type")
 	}
 }
