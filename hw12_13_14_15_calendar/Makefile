@@ -8,13 +8,16 @@ build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
 run: build
-	$(BIN) -config ./configs/config.toml
+	$(BIN) -config ./configs/config.env
+
+migrate:
+	migrate -source file://../migrations -database postgres://otus_calendar_user:otus_calendar_password@localhost:5432/otus_calendar?sslmode=disable up
 
 build-img:
 	docker build \
 		--build-arg=LDFLAGS="$(LDFLAGS)" \
 		-t $(DOCKER_IMG) \
-		-f build/Dockerfile .
+		-f docker/build/Dockerfile .
 
 run-img: build-img
 	docker run $(DOCKER_IMG)
@@ -23,7 +26,7 @@ version: build
 	$(BIN) version
 
 test:
-	go test -race ./internal/... ./pkg/...
+	go test -race ./internal/...
 
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.41.1

@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  pg_otus_calendar:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      PGDATA: ./postgresql/data/pgdata
+      POSTGRES_DB: otus_calendar
+      POSTGRES_USER: otus_calendar_user
+      POSTGRES_PASSWORD: otus_calendar_password
