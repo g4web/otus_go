@@ -62,4 +62,14 @@ func TestTelnetClient(t *testing.T) {
 
 		wg.Wait()
 	})
+
+	t.Run("nonexistent address", func(t *testing.T) {
+		in := &bytes.Buffer{}
+		out := &bytes.Buffer{}
+
+		timeout, _ := time.ParseDuration("10s")
+
+		client := NewTelnetClient("127.0.0.1:4343", timeout, ioutil.NopCloser(in), out)
+		require.Error(t, client.Connect())
+	})
 }
