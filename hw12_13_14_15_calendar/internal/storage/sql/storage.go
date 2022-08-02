@@ -53,7 +53,6 @@ func (s *Storage) Insert(e *storage.EventDTO) error {
 					($1, $2, $3, $4, $5, $6)
 				;
 	`
-
 	_, err := s.db.ExecContext(
 		s.ctx,
 		query,
@@ -62,13 +61,13 @@ func (s *Storage) Insert(e *storage.EventDTO) error {
 		e.Description(),
 		e.StartDate().Round(time.Microsecond),
 		e.EndDate().Round(time.Microsecond),
-		e.NotificationBefore().Round(time.Second).Seconds(),
+		e.NotificationBefore().Seconds(),
 	)
 
 	return err
 }
 
-func (s *Storage) Update(eventID int, e *storage.EventDTO) (bool, error) {
+func (s *Storage) Update(eventID int32, e *storage.EventDTO) error {
 	query := `
 				UPDATE 
 					event
@@ -91,13 +90,13 @@ func (s *Storage) Update(eventID int, e *storage.EventDTO) (bool, error) {
 		e.Description(),
 		e.StartDate(),
 		e.EndDate(),
-		int(e.NotificationBefore().Round(time.Second).Seconds()),
+		e.NotificationBefore().Seconds(),
 	)
 
-	return err == nil, err
+	return err
 }
 
-func (s *Storage) Delete(id int) (bool, error) {
+func (s *Storage) Delete(id int32) error {
 	query := `
 				DELETE
 				FROM
@@ -108,22 +107,22 @@ func (s *Storage) Delete(id int) (bool, error) {
 
 	result, err := s.db.ExecContext(s.ctx, query, id)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if rowsAffected != 1 {
-		return false, ErrRowsAffected
+		return ErrRowsAffected
 	}
 
-	return true, nil
+	return nil
 }
 
-func (s *Storage) FindOneById(eventId int) (*storage.EventDTO, error) {
+func (s *Storage) FindOneById(eventId int32) (*storage.EventDTO, error) {
 	query := `
 		SELECT
 		 id,
@@ -142,7 +141,7 @@ func (s *Storage) FindOneById(eventId int) (*storage.EventDTO, error) {
 	row := s.db.QueryRowContext(s.ctx, query, eventId)
 
 	var title, description string
-	var id, user_id, notification_before int
+	var id, user_id, notification_before int32
 	var start_date, end_date time.Time
 	err := row.Scan(
 		&id,
@@ -173,7 +172,7 @@ func (s *Storage) FindOneById(eventId int) (*storage.EventDTO, error) {
 	), nil
 }
 
-func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userID int) ([]*storage.EventDTO, error) {
+func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userID int32) ([]*storage.EventDTO, error) {
 	sqlQuery := `
 		SELECT
 		 id,
@@ -201,7 +200,7 @@ func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userI
 		var event *storage.EventDTO
 
 		var title, description string
-		var id, user_id, notification_before int
+		var id, user_id, notification_before int32
 		var start_date, end_date time.Time
 
 		err = rows.Scan(

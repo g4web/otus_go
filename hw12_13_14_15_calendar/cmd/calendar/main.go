@@ -5,10 +5,12 @@ import (
 	"errors"
 	"flag"
 	"log"
-	"os"
+	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
+
+	internalgrpc "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/server/grpc"
 
 	"github.com/g4web/otus_go/hw12_13_14_15_calendar/configs"
 	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage"
@@ -49,29 +51,40 @@ func main() {
 
 	calendar := app.New(logg, eventStorage)
 
-	server := internalhttp.NewServer(logg, calendar, config)
+	httpServer := internalhttp.NewServer(logg, calendar, config)
+	grpcServer := internalgrpc.NewServer(logg, calendar, config)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
 	go func() {
-		<-ctx.Done()
+		logg.Info("running http server...")
+		if err := httpServer.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logg.Error("Fail to run http server " + err.Error())
+		}
+	}()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+	go func() {
+		logg.Info("running grpc server...")
+		if err := grpcServer.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logg.Error("Fail to run grpc server " + err.Error())
 		}
 	}()
 
 	logg.Info("calendar is running...")
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
+	<-ctx.Done()
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+	defer func() {
 		cancel()
-		os.Exit(1) //nolint:gocritic
+	}()
+
+	if err := httpServer.Stop(ctx); err != nil {
+		logg.Error(err.Error())
+	}
+	if err := grpcServer.Stop(ctx); err != nil {
+		logg.Error(err.Error())
 	}
 }
 

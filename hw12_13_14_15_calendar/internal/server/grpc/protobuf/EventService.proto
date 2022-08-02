@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package event;
+
+option go_package = "./;protobuf";
+
+service Calendar {
+  rpc Create (CreateRequest) returns (CreateResponse) {}
+  rpc Event (EventRequest) returns (EventResponse) {}
+  rpc WeakEvents (EventsRequest) returns (EventsResponse) {}
+  rpc Edit (EditRequest) returns (EditResponse) {}
+  rpc Delete (DeleteRequest) returns (DeleteResponse) {}
+}
+
+message CreateRequest {
+  string Title = 2;
+  string Description = 3;
+  int32  UserID = 5;
+  string StartDate = 6;
+  string EndDate = 7;
+  int32 NotificationBefore = 8;
+  int32 AuthorUserID = 9;
+}
+
+message CreateResponse {}
+
+
+message EventRequest {
+  int32 Id = 1;
+  int32 AuthorUserID = 7;
+}
+
+message EventResponse {
+  int32  Id = 1;
+  string Title = 2;
+  string Description = 3;
+  int32  UserID = 4;
+  string StartDate = 5;
+  string EndDate = 6;
+  int32 NotificationBefore = 7;
+}
+
+message EventsRequest {
+  string Date = 1;
+  int32 AuthorUserID = 7;
+}
+
+message EventsResponse {
+  map<string, EventResponse> list = 1;
+}
+
+
+message EditRequest {
+  int32  Id = 1;
+  string Title = 2;
+  string Description = 3;
+  string StartDate = 4;
+  string EndDate = 5;
+  int32 NotificationBefore = 6;
+  int32 AuthorUserID = 7;
+}
+
+message EditResponse {}
+
+
+
+message DeleteRequest {
+  int32 ID = 1;
+  int32 AuthorUserID = 7;
+}
+
+message DeleteResponse {}

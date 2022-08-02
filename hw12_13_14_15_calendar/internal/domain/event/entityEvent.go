@@ -5,10 +5,10 @@ import (
 )
 
 type Event struct {
-	id                 int
+	id                 int32
 	title              string
 	description        string
-	userID             int
+	userID             int32
 	startDate          time.Time
 	endDate            time.Time
 	notificationBefore time.Duration
@@ -17,7 +17,7 @@ type Event struct {
 func NewEvent(
 	title string,
 	description string,
-	userID int,
+	userID int32,
 	startDate time.Time,
 	endDate time.Time,
 	notificationBefore time.Duration,
@@ -32,7 +32,7 @@ func NewEvent(
 	}
 }
 
-func (e *Event) Id() int {
+func (e *Event) Id() int32 {
 	return e.id
 }
 
@@ -44,7 +44,7 @@ func (e *Event) Description() string {
 	return e.description
 }
 
-func (e *Event) UserID() int {
+func (e *Event) UserID() int32 {
 	return e.userID
 }
 

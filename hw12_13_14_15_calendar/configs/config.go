@@ -15,6 +15,8 @@ type Config struct {
 	DbPassword  string `mapstructure:"DB_PASSWORD"`
 	HttpHost    string `mapstructure:"HTTP_HOST"`
 	HttpPort    string `mapstructure:"HTTP_PORT"`
+	GrpcHost    string `mapstructure:"GRPC_HOST"`
+	GrpcPort    string `mapstructure:"GRPC_PORT"`
 }
 
 func NewConfig(filePath string) (*Config, error) {

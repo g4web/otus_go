@@ -20,7 +20,7 @@ func TestStorage(t *testing.T) {
 			0,
 			"title",
 			"desc",
-			userId,
+			int32(userId),
 			startDate,
 			endDate,
 			duration,
@@ -33,14 +33,13 @@ func TestStorage(t *testing.T) {
 			1,
 			"title",
 			"desc",
-			userId,
+			int32(userId),
 			startDate,
 			endDate,
 			duration,
 		), "The saved event is not equal to the founded")
 
-		result, err := s.Delete(1)
-		require.Equal(t, true, result)
+		err = s.Delete(1)
 		require.NoError(t, err)
 	})
 
@@ -49,7 +48,7 @@ func TestStorage(t *testing.T) {
 			0,
 			"title",
 			"desc",
-			userId,
+			int32(userId),
 			startDate,
 			endDate,
 			duration,
@@ -62,20 +61,20 @@ func TestStorage(t *testing.T) {
 			1,
 			"title",
 			"desc",
-			userId,
+			int32(userId),
 			startDate,
 			endDate,
 			duration,
 		), "The saved event is not equal to the founded")
 
-		foundedEventDTOs, err := s.FindListByPeriod(startDate, endDate, userId)
+		foundedEventDTOs, err := s.FindListByPeriod(startDate, endDate, int32(userId))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(foundedEventDTOs), "Not founded events by period")
 
 		foundedEventDTOs, err = s.FindListByPeriod(
 			startDate.AddDate(0, -1, -1),
 			startDate.AddDate(0, 0, 1),
-			userId,
+			int32(userId),
 		)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(foundedEventDTOs), "Not founded events by period")
@@ -83,7 +82,7 @@ func TestStorage(t *testing.T) {
 		foundedEventDTOs, err = s.FindListByPeriod(
 			startDate.AddDate(0, 0, 27),
 			startDate.AddDate(0, 0, 28),
-			userId,
+			int32(userId),
 		)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(foundedEventDTOs), "Not founded events by period")
@@ -91,7 +90,7 @@ func TestStorage(t *testing.T) {
 		foundedEventDTOs, err = s.FindListByPeriod(
 			endDate,
 			endDate.AddDate(0, 0, 1),
-			userId,
+			int32(userId),
 		)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(foundedEventDTOs), "Founded not existing events by period")
@@ -99,13 +98,12 @@ func TestStorage(t *testing.T) {
 		foundedEventDTOs, err = s.FindListByPeriod(
 			startDate.AddDate(0, -1, 0),
 			startDate.AddDate(0, 0, -1),
-			userId,
+			int32(userId),
 		)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(foundedEventDTOs), "Founded not existing events by period")
 
-		result, err := s.Delete(1)
-		require.Equal(t, true, result)
+		err = s.Delete(1)
 		require.NoError(t, err)
 	})
 
@@ -114,7 +112,7 @@ func TestStorage(t *testing.T) {
 			0,
 			"title",
 			"desc",
-			userId,
+			int32(userId),
 			startDate,
 			endDate,
 			duration,
@@ -130,14 +128,12 @@ func TestStorage(t *testing.T) {
 			endDate,
 			duration,
 		)
-		result, err := s.Update(1, newVersionEvent)
-		require.Equal(t, result, true, "")
+		err = s.Update(1, newVersionEvent)
 		require.NoError(t, err)
 		eventDTO, err := s.FindOneById(1)
 		require.Equal(t, eventDTO, newVersionEvent, "The updated event is not equal to the founded")
 
-		result, err = s.Delete(1)
-		require.Equal(t, result, true, "")
+		err = s.Delete(1)
 		require.NoError(t, err)
 	})
 
@@ -146,15 +142,14 @@ func TestStorage(t *testing.T) {
 			0,
 			"title",
 			"desc",
-			userId,
+			int32(userId),
 			startDate,
 			endDate,
 			duration,
 		))
 		require.NoError(t, err)
 
-		result, err := s.Delete(1)
-		require.Equal(t, true, result)
+		err = s.Delete(1)
 		require.NoError(t, err)
 
 		eventDTO, err := s.FindOneById(1)

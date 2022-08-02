@@ -12,12 +12,12 @@ var ErrEventNotFound = errors.New("event not found")
 
 type Storage struct {
 	mu             sync.RWMutex
-	eventsDict     map[int]*storage.EventDTO
-	userEventsDict map[int][]int
+	eventsDict     map[int32]*storage.EventDTO
+	userEventsDict map[int32][]int32
 }
 
 func New() *Storage {
-	return &Storage{eventsDict: make(map[int]*storage.EventDTO), userEventsDict: make(map[int][]int)}
+	return &Storage{eventsDict: make(map[int32]*storage.EventDTO), userEventsDict: make(map[int32][]int32)}
 }
 
 func (s *Storage) Insert(e *storage.EventDTO) error {
@@ -25,14 +25,14 @@ func (s *Storage) Insert(e *storage.EventDTO) error {
 	defer s.mu.Unlock()
 
 	newId := len(s.eventsDict) + 1
-	e.SetId(newId)
+	e.SetId(int32(newId))
 	s.eventsDict[e.ID()] = e
 	s.userEventsDict[e.UserID()] = append(s.userEventsDict[e.UserID()], e.ID())
 
 	return nil
 }
 
-func (s *Storage) Update(id int, e *storage.EventDTO) (bool, error) {
+func (s *Storage) Update(id int32, e *storage.EventDTO) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -40,13 +40,13 @@ func (s *Storage) Update(id int, e *storage.EventDTO) (bool, error) {
 
 		s.eventsDict[id] = e
 
-		return true, nil
+		return nil
 	}
 
-	return false, ErrEventNotFound
+	return ErrEventNotFound
 }
 
-func (s *Storage) Delete(id int) (bool, error) {
+func (s *Storage) Delete(id int32) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -67,13 +67,13 @@ func (s *Storage) Delete(id int) (bool, error) {
 
 		delete(s.eventsDict, id)
 
-		return true, nil
+		return nil
 	}
 
-	return false, ErrEventNotFound
+	return ErrEventNotFound
 }
 
-func (s *Storage) FindOneById(id int) (*storage.EventDTO, error) {
+func (s *Storage) FindOneById(id int32) (*storage.EventDTO, error) {
 	if eventDTO, ok := s.eventsDict[id]; ok {
 		return eventDTO, nil
 	}
@@ -81,7 +81,7 @@ func (s *Storage) FindOneById(id int) (*storage.EventDTO, error) {
 	return nil, ErrEventNotFound
 }
 
-func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userID int) ([]*storage.EventDTO, error) {
+func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userID int32) ([]*storage.EventDTO, error) {
 	var result []*storage.EventDTO
 	if userEventIds, ok := s.userEventsDict[userID]; ok {
 		for _, eventID := range userEventIds {

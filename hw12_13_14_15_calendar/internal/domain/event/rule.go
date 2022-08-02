@@ -41,7 +41,7 @@ func (u *Rules) CheckDate(event *Event) error {
 	return nil
 }
 
-func (u *Rules) CheckCreateAccess(event *Event, userID int) error {
+func (u *Rules) CheckCreateAccess(event *Event, userID int32) error {
 	if userID != event.UserID() {
 		return ErrReadAccessDenied
 	}
@@ -49,7 +49,7 @@ func (u *Rules) CheckCreateAccess(event *Event, userID int) error {
 	return nil
 }
 
-func (u *Rules) CheckReadAccess(event *Event, userID int) error {
+func (u *Rules) CheckReadAccess(event *Event, userID int32) error {
 	if userID != event.UserID() {
 		return ErrReadAccessDenied
 	}
@@ -57,7 +57,7 @@ func (u *Rules) CheckReadAccess(event *Event, userID int) error {
 	return nil
 }
 
-func (u *Rules) CheckEditAccess(event *Event, userID int) error {
+func (u *Rules) CheckEditAccess(event *Event, userID int32) error {
 	if userID != event.UserID() {
 		return ErrWriteAccessDenied
 	}
@@ -65,7 +65,7 @@ func (u *Rules) CheckEditAccess(event *Event, userID int) error {
 	return nil
 }
 
-func (u *Rules) CheckDeleteAccess(event *Event, userID int) error {
+func (u *Rules) CheckDeleteAccess(event *Event, userID int32) error {
 	if userID != event.UserID() {
 		return ErrWriteAccessDenied
 	}

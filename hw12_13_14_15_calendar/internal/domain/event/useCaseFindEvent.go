@@ -17,7 +17,7 @@ func NewUseCaseFindEvent(storage storage.EventStorage) *UseCaseFindEvent {
 	return &UseCaseFindEvent{storage: storage}
 }
 
-func (u *UseCaseFindEvent) FindEvent(id int, userID int) (*Event, error) {
+func (u *UseCaseFindEvent) FindEvent(id int32, userID int32) (*Event, error) {
 	eventDTO, err := u.storage.FindOneById(id)
 	if err != nil {
 		return nil, err
@@ -37,21 +37,21 @@ func (u *UseCaseFindEvent) FindEvent(id int, userID int) (*Event, error) {
 	return event, nil
 }
 
-func (u *UseCaseFindEvent) FindEventsForDay(startDate time.Time, userID int) ([]*Event, error) {
+func (u *UseCaseFindEvent) FindEventsForDay(startDate time.Time, userID int32) ([]*Event, error) {
 	endDate := startDate.AddDate(0, 0, 1)
 	eventDTOs, err := u.storage.FindListByPeriod(startDate, endDate, userID)
 
 	return convertList(eventDTOs), err
 }
 
-func (u *UseCaseFindEvent) FindEventsForWeek(startDate time.Time, userID int) ([]*Event, error) {
+func (u *UseCaseFindEvent) FindEventsForWeek(startDate time.Time, userID int32) ([]*Event, error) {
 	endDate := startDate.AddDate(0, 0, 7)
 	eventDTOs, err := u.storage.FindListByPeriod(startDate, endDate, userID)
 
 	return convertList(eventDTOs), err
 }
 
-func (u *UseCaseFindEvent) FindEventsForMonth(startDate time.Time, userID int) ([]*Event, error) {
+func (u *UseCaseFindEvent) FindEventsForMonth(startDate time.Time, userID int32) ([]*Event, error) {
 	endDate := startDate.AddDate(0, 1, 0)
 	eventDTOs, err := u.storage.FindListByPeriod(startDate, endDate, userID)
 

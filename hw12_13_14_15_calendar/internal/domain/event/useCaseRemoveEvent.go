@@ -13,9 +13,9 @@ func NewUseCaseRemoveEvent(storage storage.EventStorage) *UseCaseRemoveEvent {
 	return &UseCaseRemoveEvent{storage: storage, rules: rules}
 }
 
-func (u *UseCaseRemoveEvent) Remove(e *Event, userID int) (bool, error) {
+func (u *UseCaseRemoveEvent) Remove(e *Event, userID int32) error {
 	if err := u.rules.CheckDeleteAccess(e, userID); err != nil {
-		return false, err
+		return err
 	}
 
 	return u.storage.Delete(e.Id())

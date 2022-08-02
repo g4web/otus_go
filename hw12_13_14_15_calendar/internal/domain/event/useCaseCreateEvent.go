@@ -20,11 +20,11 @@ func NewUseCaseCreateEvent(storage storage.EventStorage) *UseCaseCreateEvent {
 func (u *UseCaseCreateEvent) CreateEvent(
 	title string,
 	description string,
-	userID int,
+	userID int32,
 	startDate time.Time,
 	endDate time.Time,
 	notificationBefore time.Duration,
-	authorUserID int,
+	authorUserID int32,
 ) error {
 	newEvent := NewEvent(
 		title,

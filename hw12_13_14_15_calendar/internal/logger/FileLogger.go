@@ -7,7 +7,7 @@ import (
 )
 
 type FileLogger struct {
-	level    int
+	level    int32
 	filePath string
 	logFile  *os.File
 }
@@ -19,7 +19,7 @@ const (
 	LogLevelError   = "error"
 )
 
-var logLevels = map[string]int{
+var logLevels = map[string]int32{
 	LogLevelDebug:   10,
 	LogLevelInfo:    20,
 	LogLevelWarning: 30,

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage"
+	"github.com/jinzhu/copier"
 )
 
 type UseCaseEditEvent struct {
@@ -24,14 +25,23 @@ func (u *UseCaseEditEvent) EditEvent(
 	startDate time.Time,
 	endDate time.Time,
 	notificationBefore time.Duration,
-	authorUserID int,
-) (bool, error) {
+	authorUserID int32,
+) error {
 	if err := u.rules.CheckEditAccess(eventForUpdate, authorUserID); err != nil {
-		return false, err
+		return err
 	}
 
-	if err := u.rules.CheckDate(eventForUpdate); err != nil {
-		return false, err
+	eventForValidate := &Event{}
+	copier.Copy(&eventForValidate, &eventForUpdate)
+
+	eventForValidate.title = title
+	eventForValidate.description = description
+	eventForValidate.startDate = startDate
+	eventForValidate.endDate = endDate
+	eventForValidate.notificationBefore = notificationBefore
+
+	if err := u.rules.CheckDate(eventForValidate); err != nil {
+		return err
 	}
 
 	EventDTO := storage.NewEventDTO(
@@ -44,9 +54,9 @@ func (u *UseCaseEditEvent) EditEvent(
 		notificationBefore,
 	)
 
-	success, err := u.storage.Update(eventForUpdate.Id(), EventDTO)
+	err := u.storage.Update(eventForUpdate.Id(), EventDTO)
 
-	if success {
+	if err == nil {
 		eventForUpdate.title = title
 		eventForUpdate.description = description
 		eventForUpdate.startDate = startDate
@@ -54,5 +64,5 @@ func (u *UseCaseEditEvent) EditEvent(
 		eventForUpdate.notificationBefore = notificationBefore
 	}
 
-	return success, err
+	return err
 }

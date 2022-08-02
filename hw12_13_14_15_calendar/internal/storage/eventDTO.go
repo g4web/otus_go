@@ -1,18 +1,20 @@
 package storage
 
-import "time"
+import (
+	"time"
+)
 
 type EventDTO struct {
-	id                 int
+	id                 int32
 	title              string
 	description        string
-	userID             int
+	userID             int32
 	startDate          time.Time
 	endDate            time.Time
-	notificationBefore int
+	notificationBefore int32
 }
 
-func NewEventDTO(id int, title string, description string, userID int, startDate time.Time, endDate time.Time, notificationBefore time.Duration) *EventDTO {
+func NewEventDTO(id int32, title string, description string, userID int32, startDate time.Time, endDate time.Time, notificationBefore time.Duration) *EventDTO {
 	return &EventDTO{
 		id:                 id,
 		title:              title,
@@ -20,15 +22,15 @@ func NewEventDTO(id int, title string, description string, userID int, startDate
 		userID:             userID,
 		startDate:          startDate,
 		endDate:            endDate,
-		notificationBefore: int(notificationBefore.Round(time.Second).Seconds()),
+		notificationBefore: int32(notificationBefore.Round(time.Second).Seconds()),
 	}
 }
 
-func (e *EventDTO) SetId(id int) {
+func (e *EventDTO) SetId(id int32) {
 	e.id = id
 }
 
-func (e EventDTO) ID() int {
+func (e EventDTO) ID() int32 {
 	return e.id
 }
 
@@ -40,7 +42,7 @@ func (e EventDTO) Description() string {
 	return e.description
 }
 
-func (e EventDTO) UserID() int {
+func (e EventDTO) UserID() int32 {
 	return e.userID
 }
 
@@ -53,5 +55,5 @@ func (e EventDTO) EndDate() time.Time {
 }
 
 func (e EventDTO) NotificationBefore() time.Duration {
-	return time.Duration(e.notificationBefore * 1e9)
+	return time.Duration(float64(e.notificationBefore) * 1e9)
 }

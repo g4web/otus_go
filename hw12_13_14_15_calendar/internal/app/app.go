@@ -18,18 +18,18 @@ func New(logger logger.Logger, eventStorage storage.EventStorage) *App {
 }
 
 func (a *App) CreateEvent(
-	Title string,
+	title string,
 	description string,
-	userID int,
+	userID int32,
 	startDate time.Time,
 	endDate time.Time,
 	notificationBefore time.Duration,
-	authorUserID int,
+	authorUserID int32,
 ) error {
 	useCase := event.NewUseCaseCreateEvent(a.eventStorage)
 
 	err := useCase.CreateEvent(
-		Title,
+		title,
 		description,
 		userID,
 		startDate,
@@ -42,8 +42,8 @@ func (a *App) CreateEvent(
 }
 
 func (a *App) ReadEvent(
-	id int,
-	userID int,
+	id int32,
+	userID int32,
 ) (*event.Event, error) {
 	useCase := event.NewUseCaseFindEvent(a.eventStorage)
 
@@ -52,7 +52,7 @@ func (a *App) ReadEvent(
 
 func (a *App) FindEventsForDay(
 	startDate time.Time,
-	userID int,
+	userID int32,
 ) ([]*event.Event, error) {
 	useCase := event.NewUseCaseFindEvent(a.eventStorage)
 
@@ -61,7 +61,7 @@ func (a *App) FindEventsForDay(
 
 func (a *App) FindEventsForWeek(
 	startDate time.Time,
-	userID int,
+	userID int32,
 ) ([]*event.Event, error) {
 	useCase := event.NewUseCaseFindEvent(a.eventStorage)
 
@@ -70,7 +70,7 @@ func (a *App) FindEventsForWeek(
 
 func (a *App) FindEventsForMonth(
 	startDate time.Time,
-	userID int,
+	userID int32,
 ) ([]*event.Event, error) {
 	useCase := event.NewUseCaseFindEvent(a.eventStorage)
 
@@ -78,19 +78,19 @@ func (a *App) FindEventsForMonth(
 }
 
 func (a *App) UpdateEvent(
-	id int,
+	id int32,
 	title string,
 	description string,
 	startDate time.Time,
 	endDate time.Time,
 	notificationBefore time.Duration,
-	authorUserID int,
-) (bool, error) {
+	authorUserID int32,
+) error {
 	useCase := event.NewUseCaseEditEvent(a.eventStorage)
 
 	eventForUpdate, err := a.ReadEvent(id, authorUserID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	return useCase.EditEvent(
@@ -104,10 +104,10 @@ func (a *App) UpdateEvent(
 	)
 }
 
-func (a *App) DeleteEvent(id int, authorUserID int) (bool, error) {
+func (a *App) DeleteEvent(id int32, authorUserID int32) error {
 	eventForDelete, err := a.ReadEvent(id, authorUserID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	useCase := event.NewUseCaseRemoveEvent(a.eventStorage)
