@@ -7,25 +7,25 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/config"
 	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage"
-
-	"github.com/g4web/otus_go/hw12_13_14_15_calendar/configs"
 	"github.com/jmoiron/sqlx"
+	// PG driver.
 	_ "github.com/lib/pq"
 )
 
-var ErrRowsAffected = errors.New("The number of affected rows is not equal to one")
+var ErrRowsAffected = errors.New("the number of affected rows is not equal to one")
 
 type Storage struct {
 	db  *sqlx.DB
 	ctx context.Context
 }
 
-func New(c *configs.Config) (*Storage, error) {
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", c.DbUser, c.DbPassword, c.DbName)
+func New(c *config.Config) (*Storage, error) {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", c.DBHost, c.DBUser, c.DBPassword, c.DBName)
 
 	s := &Storage{}
-	err := s.connect(dsn, context.Background())
+	err := s.connect(context.Background(), dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func New(c *configs.Config) (*Storage, error) {
 	return s, nil
 }
 
-func (s *Storage) connect(dsn string, ctx context.Context) error {
+func (s *Storage) connect(ctx context.Context, dsn string) error {
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return err
@@ -96,6 +96,24 @@ func (s *Storage) Update(eventID int32, e *storage.EventDTO) error {
 	return err
 }
 
+func (s *Storage) MarkNotificationAsSent(eventID int32) error {
+	query := `
+				UPDATE 
+					event
+				SET
+				    notification_is_sent = true
+				WHERE 
+					id = $1
+	`
+	_, err := s.db.ExecContext(
+		s.ctx,
+		query,
+		eventID,
+	)
+
+	return err
+}
+
 func (s *Storage) Delete(id int32) error {
 	query := `
 				DELETE
@@ -122,7 +140,28 @@ func (s *Storage) Delete(id int32) error {
 	return nil
 }
 
-func (s *Storage) FindOneById(eventId int32) (*storage.EventDTO, error) {
+func (s *Storage) DeleteOld(endDate time.Time) (int32, error) {
+	query := `
+				DELETE
+				FROM
+					event
+				WHERE
+				    start_date < $1
+	`
+	result, err := s.db.ExecContext(s.ctx, query, endDate)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return int32(rowsAffected), err
+	}
+
+	return int32(rowsAffected), nil
+}
+
+func (s *Storage) FindOneByID(eventID int32) (*storage.EventDTO, error) {
 	query := `
 		SELECT
 		 id,
@@ -138,19 +177,19 @@ func (s *Storage) FindOneById(eventId int32) (*storage.EventDTO, error) {
 		  id = $1
 		;
 	`
-	row := s.db.QueryRowContext(s.ctx, query, eventId)
+	row := s.db.QueryRowContext(s.ctx, query, eventID)
 
 	var title, description string
-	var id, user_id, notification_before int32
-	var start_date, end_date time.Time
+	var id, userID, notificationBefore int32
+	var startDate, endDate time.Time
 	err := row.Scan(
 		&id,
 		&title,
 		&description,
-		&user_id,
-		&start_date,
-		&end_date,
-		&notification_before,
+		&userID,
+		&startDate,
+		&endDate,
+		&notificationBefore,
 	)
 
 	if err == sql.ErrNoRows {
@@ -165,10 +204,10 @@ func (s *Storage) FindOneById(eventId int32) (*storage.EventDTO, error) {
 		id,
 		title,
 		description,
-		user_id,
-		start_date,
-		end_date,
-		time.Duration(notification_before*1e9),
+		userID,
+		startDate,
+		endDate,
+		time.Duration(notificationBefore*1e9),
 	), nil
 }
 
@@ -195,24 +234,53 @@ func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userI
 	}
 	defer rows.Close()
 
+	return s.rowsToEvents(rows)
+}
+
+func (s *Storage) FindNotificationByPeriod(startDate time.Time, endDate time.Time) ([]*storage.EventDTO, error) {
+	sqlQuery := `
+		SELECT
+		 id,
+		 title,
+		 description,
+		 user_id,
+		 start_date,
+		 end_date,
+		 notification_before
+		FROM
+		  event
+		WHERE
+		  notification_is_sent = false AND  
+		  start_date - (notification_before || ' seconds')::interval between $1 AND $2
+		;
+	`
+	rows, err := s.db.QueryxContext(s.ctx, sqlQuery, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return s.rowsToEvents(rows)
+}
+
+func (s *Storage) rowsToEvents(rows *sqlx.Rows) ([]*storage.EventDTO, error) {
 	events := make([]*storage.EventDTO, 0)
 	for rows.Next() {
 		var event *storage.EventDTO
 
 		var title, description string
-		var id, user_id, notification_before int32
-		var start_date, end_date time.Time
+		var id, userID, notificationBefore int32
+		var startDate, endDate time.Time
 
-		err = rows.Scan(
+		err := rows.Scan(
 			&id,
 			&title,
 			&description,
-			&user_id,
-			&start_date,
-			&end_date,
-			&notification_before,
+			&userID,
+			&startDate,
+			&endDate,
+			&notificationBefore,
 		)
-
 		if err != nil {
 			return nil, err
 		}
@@ -221,10 +289,10 @@ func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userI
 			id,
 			title,
 			description,
-			user_id,
-			start_date,
-			end_date,
-			time.Duration(notification_before*1e9),
+			userID,
+			startDate,
+			endDate,
+			time.Duration(notificationBefore*1e9),
 		)
 		events = append(events, event)
 	}

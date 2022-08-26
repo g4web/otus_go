@@ -1,0 +1,3 @@
+FROM golang:1.18.5
+
+CMD /calendar/bin/sender --config=/calendar/config/config.env

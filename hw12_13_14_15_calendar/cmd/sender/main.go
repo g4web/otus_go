@@ -5,15 +5,14 @@ import (
 	"errors"
 	"flag"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
-	"github.com/g4web/otus_go/hw12_13_14_15_calendar/app/calendar"
+	"github.com/g4web/otus_go/hw12_13_14_15_calendar/app/sender"
 	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/config"
-	servergrpc "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/grpc"
-	serverhttp "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/http"
 	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/logger"
+	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/messagequeue"
 	"github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/g4web/otus_go/hw12_13_14_15_calendar/internal/storage/sql"
@@ -41,38 +40,20 @@ func main() {
 		logg.Error(err.Error())
 	}
 
-	calendarApp := calendar.New(logg, eventStorage)
-
-	httpServer := serverhttp.NewServer(logg, calendarApp, configs)
-	grpcServer := servergrpc.NewServer(logg, calendarApp, configs)
+	mq := messagequeue.NewRabbitMQ(configs.MQAddr, configs.MQQueue, configs.MQHandlersCount, logg)
+	app := sender.NewSender(eventStorage, logg, configs, mq)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	go func() {
-		logg.Info("running http server...")
-		if err := httpServer.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logg.Error("Fail to run http server " + err.Error())
-		}
-	}()
-
-	go func() {
-		logg.Info("running grpc server...")
-		if err := grpcServer.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logg.Error("fail to run grpc server " + err.Error())
-		}
-	}()
-
-	logg.Info("calendar is running...")
+	logg.Error("waiting for the rabbit to start...")
+	time.Sleep(time.Second * 10) // waiting for the rabbit to start
+	err = app.Run(ctx)
+	if err != nil {
+		logg.Error(err.Error())
+	}
 
 	<-ctx.Done()
-
-	if err := httpServer.Stop(ctx); err != nil {
-		logg.Error(err.Error())
-	}
-	if err := grpcServer.Stop(ctx); err != nil {
-		logg.Error(err.Error())
-	}
 }
 
 func getStorage(c *config.Config) (storage.EventStorage, error) {

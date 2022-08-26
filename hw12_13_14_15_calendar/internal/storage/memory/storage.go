@@ -24,8 +24,8 @@ func (s *Storage) Insert(e *storage.EventDTO) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	newId := len(s.eventsDict) + 1
-	e.SetId(int32(newId))
+	newID := len(s.eventsDict) + 1
+	e.SetID(int32(newID))
 	s.eventsDict[e.ID()] = e
 	s.userEventsDict[e.UserID()] = append(s.userEventsDict[e.UserID()], e.ID())
 
@@ -37,9 +37,17 @@ func (s *Storage) Update(id int32, e *storage.EventDTO) error {
 	defer s.mu.Unlock()
 
 	if _, ok := s.eventsDict[id]; ok {
-
 		s.eventsDict[id] = e
 
+		return nil
+	}
+
+	return ErrEventNotFound
+}
+
+func (s *Storage) MarkNotificationAsSent(id int32) error {
+	if eventDTO, ok := s.eventsDict[id]; ok {
+		eventDTO.MarkNotificationAsSent()
 		return nil
 	}
 
@@ -50,30 +58,27 @@ func (s *Storage) Delete(id int32) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if event, ok := s.eventsDict[id]; ok {
-
-		indexForDelete := 0
-		for index, eventID := range s.userEventsDict[event.UserID()] {
-			if eventID == id {
-				indexForDelete = index
-				break
-			}
-		}
-
-		s.userEventsDict[event.UserID()] = append(
-			s.userEventsDict[event.UserID()][:indexForDelete],
-			s.userEventsDict[event.UserID()][indexForDelete+1:]...,
-		)
-
-		delete(s.eventsDict, id)
-
+	if eventDTO, ok := s.eventsDict[id]; ok {
+		s.deleteEvent(eventDTO)
 		return nil
 	}
 
 	return ErrEventNotFound
 }
 
-func (s *Storage) FindOneById(id int32) (*storage.EventDTO, error) {
+func (s *Storage) DeleteOld(endDate time.Time) (int32, error) {
+	rowsAffected := 0
+	for _, eventDTO := range s.eventsDict {
+		if eventDTO.StartDate().Before(endDate) {
+			s.deleteEvent(eventDTO)
+			rowsAffected++
+		}
+	}
+
+	return int32(rowsAffected), nil
+}
+
+func (s *Storage) FindOneByID(id int32) (*storage.EventDTO, error) {
 	if eventDTO, ok := s.eventsDict[id]; ok {
 		return eventDTO, nil
 	}
@@ -96,4 +101,34 @@ func (s *Storage) FindListByPeriod(startDate time.Time, endDate time.Time, userI
 	}
 
 	return result, nil
+}
+
+func (s *Storage) FindNotificationByPeriod(startDate time.Time, endDate time.Time) ([]*storage.EventDTO, error) {
+	var result []*storage.EventDTO
+
+	for _, eventDTO := range s.eventsDict {
+		notificationTime := eventDTO.StartDate().Add(-eventDTO.NotificationBefore())
+		if !eventDTO.NotificationIsSent() && notificationTime.After(startDate) && notificationTime.Before(endDate) {
+			result = append(result, eventDTO)
+		}
+	}
+
+	return result, nil
+}
+
+func (s *Storage) deleteEvent(eventDTO *storage.EventDTO) {
+	indexForDelete := 0
+	for index, eventID := range s.userEventsDict[eventDTO.UserID()] {
+		if eventID == eventDTO.ID() {
+			indexForDelete = index
+			break
+		}
+	}
+
+	s.userEventsDict[eventDTO.UserID()] = append(
+		s.userEventsDict[eventDTO.UserID()][:indexForDelete],
+		s.userEventsDict[eventDTO.UserID()][indexForDelete+1:]...,
+	)
+
+	delete(s.eventsDict, eventDTO.ID())
 }

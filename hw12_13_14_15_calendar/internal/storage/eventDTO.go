@@ -12,9 +12,18 @@ type EventDTO struct {
 	startDate          time.Time
 	endDate            time.Time
 	notificationBefore int32
+	notificationIsSent bool
 }
 
-func NewEventDTO(id int32, title string, description string, userID int32, startDate time.Time, endDate time.Time, notificationBefore time.Duration) *EventDTO {
+func NewEventDTO(
+	id int32,
+	title string,
+	description string,
+	userID int32,
+	startDate time.Time,
+	endDate time.Time,
+	notificationBefore time.Duration,
+) *EventDTO {
 	return &EventDTO{
 		id:                 id,
 		title:              title,
@@ -26,7 +35,7 @@ func NewEventDTO(id int32, title string, description string, userID int32, start
 	}
 }
 
-func (e *EventDTO) SetId(id int32) {
+func (e *EventDTO) SetID(id int32) {
 	e.id = id
 }
 
@@ -56,4 +65,12 @@ func (e EventDTO) EndDate() time.Time {
 
 func (e EventDTO) NotificationBefore() time.Duration {
 	return time.Duration(float64(e.notificationBefore) * 1e9)
+}
+
+func (e *EventDTO) MarkNotificationAsSent() {
+	e.notificationIsSent = true
+}
+
+func (e *EventDTO) NotificationIsSent() bool {
+	return e.notificationIsSent
 }

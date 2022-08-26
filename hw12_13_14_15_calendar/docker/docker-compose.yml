@@ -3,10 +3,60 @@ version: "3.9"
 services:
   pg_otus_calendar:
     image: postgres
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       PGDATA: ./postgresql/data/pgdata
       POSTGRES_DB: otus_calendar
       POSTGRES_USER: otus_calendar_user
       POSTGRES_PASSWORD: otus_calendar_password
+  mq_otus_calendar:
+    image: rabbitmq:3-management-alpine
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq/mnesia/rabbit@my-rabbit
+      - ./rabbitmq/logs:/var/log/rabbitmq/log
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: otus
+      RABBITMQ_DEFAULT_PASS: pass
+  calendar:
+    build:
+      context: ..
+      dockerfile: ./docker/DockerfileCalendar
+    volumes:
+      - ../:/calendar
+    ports:
+      - "8018:8018"
+      - "8019:8019"
+    depends_on:
+      - pg_otus_calendar
+      - mq_otus_calendar
+  scheduler:
+    build:
+      context: ..
+      dockerfile: ./docker/DockerfileScheduler
+    volumes:
+      - ../:/calendar
+    depends_on:
+      - pg_otus_calendar
+      - mq_otus_calendar
+  sender:
+    build:
+      context: ..
+      dockerfile: ./docker/DockerfileSender
+    volumes:
+      - ../:/calendar
+    depends_on:
+      - pg_otus_calendar
+      - mq_otus_calendar
+volumes:
+  postgres:
+    driver: local
+
+networks:
+  default:
+    name: calendar_network
