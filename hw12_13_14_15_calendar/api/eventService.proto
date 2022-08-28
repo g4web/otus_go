@@ -37,6 +37,7 @@ message EventResponse {
   string StartDate = 5;
   string EndDate = 6;
   int32 NotificationBefore = 7;
+  bool IsSent = 8;
 }
 
 message EventsRequest {

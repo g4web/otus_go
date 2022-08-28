@@ -55,7 +55,7 @@ const expectedRequest = "{\"ID\":1,\"Title\":\"title string API 13\",\"Descripti
 	":\"2021-11-30T19:00:00Z\"}"
 
 func TestHandler(t *testing.T) {
-	calendarConfig, err := config.NewConfig("../../config/config_example.env")
+	calendarConfig, err := config.NewConfig("../../config/config_test.env")
 	if err != nil {
 		log.Fatalf("error reading config: %v", err)
 	}

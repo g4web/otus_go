@@ -76,5 +76,6 @@ func covert(e *storage.EventDTO) *Event {
 		startDate:          e.StartDate(),
 		endDate:            e.EndDate(),
 		notificationBefore: e.NotificationBefore(),
+		isSent:             e.NotificationIsSent(),
 	}
 }

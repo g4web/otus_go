@@ -12,6 +12,7 @@ type Event struct {
 	startDate          time.Time
 	endDate            time.Time
 	notificationBefore time.Duration
+	isSent             bool
 }
 
 func NewEvent(
@@ -29,6 +30,7 @@ func NewEvent(
 		startDate:          startDate,
 		endDate:            endDate,
 		notificationBefore: notificationBefore,
+		isSent:             false,
 	}
 }
 
@@ -62,4 +64,8 @@ func (e *Event) NotificationDate() time.Time {
 
 func (e *Event) NotificationBefore() time.Duration {
 	return e.notificationBefore
+}
+
+func (e *Event) IsSent() bool {
+	return e.isSent
 }

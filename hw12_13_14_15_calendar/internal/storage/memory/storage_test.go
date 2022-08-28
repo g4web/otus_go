@@ -45,6 +45,7 @@ func helperCreateTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	))
 	require.NoError(t, err)
 
@@ -58,6 +59,7 @@ func helperCreateTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	), "The saved event is not equal to the founded")
 
 	err = s.Delete(1)
@@ -77,6 +79,7 @@ func helperReadTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	))
 	require.NoError(t, err)
 
@@ -90,6 +93,7 @@ func helperReadTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	), "The saved event is not equal to the founded")
 
 	foundedEventDTOs, err := s.FindListByPeriod(startDate, endDate, int32(userID))
@@ -161,6 +165,7 @@ func helperUpdateTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	))
 	require.NoError(t, err)
 
@@ -172,6 +177,7 @@ func helperUpdateTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	)
 	err = s.Update(1, newVersionEvent)
 	require.NoError(t, err)
@@ -200,6 +206,7 @@ func helperDeleteTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	))
 	require.NoError(t, err)
 
@@ -218,6 +225,7 @@ func helperDeleteTest(
 		startDate,
 		endDate,
 		duration,
+		false,
 	))
 	require.NoError(t, err)
 

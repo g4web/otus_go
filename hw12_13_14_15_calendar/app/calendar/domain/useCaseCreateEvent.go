@@ -51,6 +51,7 @@ func (u *UseCaseCreateEvent) CreateEvent(
 		newEvent.StartDate(),
 		newEvent.EndDate(),
 		newEvent.NotificationBefore(),
+		false,
 	)
 
 	err := u.storage.Insert(eventDTO)

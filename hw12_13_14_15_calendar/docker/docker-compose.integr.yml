@@ -1,15 +1,12 @@
 version: "3.9"
 
 services:
-  sql:
+  sql_temp:
     image: postgres
-    volumes:
-      - ./postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     environment:
-      PGDATA: ./postgresql/data/pgdata
-      POSTGRES_DB: otus_calendar
+      POSTGRES_DB: otus_calendar_test
       POSTGRES_USER: otus_calendar_user
       POSTGRES_PASSWORD: otus_calendar_password
   migration:
@@ -19,7 +16,7 @@ services:
     volumes:
       - ../:/calendar
     depends_on:
-      - sql
+      - sql_temp
     command: /go/bin/goose postgres "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"  up
   mq:
     image: rabbitmq:3-management-alpine
@@ -29,6 +26,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    depends_on:
+      - migration
     environment:
       RABBITMQ_DEFAULT_USER: otus
       RABBITMQ_DEFAULT_PASS: pass
@@ -44,7 +43,7 @@ services:
     depends_on:
       - migration
       - mq
-    command: /calendar/bin/calendar --config=/calendar/config/config.env
+    command: /calendar/bin/calendar --config=/calendar/config/config_test.env
   scheduler:
     build:
       context: ..
@@ -54,7 +53,7 @@ services:
     depends_on:
       - migration
       - mq
-    command: /calendar/bin/scheduler --config=/calendar/config/config.env
+    command: /calendar/bin/scheduler --config=/calendar/config/config_test.env
   sender:
     build:
       context: ..
@@ -64,11 +63,19 @@ services:
     depends_on:
       - migration
       - mq
-    command: /calendar/bin/sender --config=/calendar/config/config.env
+    command: /calendar/bin/sender --config=/calendar/config/config_test.env
+  integr:
+    build:
+      context: ..
+      dockerfile: ./docker/DockerfileIntegr
+    volumes:
+      - ../:/calendar
+    depends_on:
+      - migration
+      - mq
 volumes:
   postgres:
     driver: local
-
 networks:
   default:
     name: calendar_network

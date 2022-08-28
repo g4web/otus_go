@@ -23,6 +23,7 @@ func NewEventDTO(
 	startDate time.Time,
 	endDate time.Time,
 	notificationBefore time.Duration,
+	notificationIsSent bool,
 ) *EventDTO {
 	return &EventDTO{
 		id:                 id,
@@ -32,6 +33,7 @@ func NewEventDTO(
 		startDate:          startDate,
 		endDate:            endDate,
 		notificationBefore: int32(notificationBefore.Round(time.Second).Seconds()),
+		notificationIsSent: notificationIsSent,
 	}
 }
 

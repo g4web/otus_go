@@ -1,1 +1,0 @@
-ALTER TABLE event ADD notification_is_sent BOOLEAN DEFAULT FALSE NOT NULL;

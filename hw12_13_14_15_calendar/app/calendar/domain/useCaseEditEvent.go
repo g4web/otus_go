@@ -52,6 +52,7 @@ func (u *UseCaseEditEvent) EditEvent(
 		startDate,
 		endDate,
 		notificationBefore,
+		false,
 	)
 
 	err := u.storage.Update(eventForUpdate.ID(), EventDTO)

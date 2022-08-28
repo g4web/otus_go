@@ -207,5 +207,6 @@ func convertEventToResponse(eventEntity *domain.Event) *protobuf.EventResponse {
 		StartDate:          eventEntity.StartDate().Format(time.RFC3339),
 		EndDate:            eventEntity.EndDate().Format(time.RFC3339),
 		NotificationBefore: int32(eventEntity.NotificationBefore()),
+		IsSent:             eventEntity.IsSent(),
 	}
 }

@@ -170,7 +170,8 @@ func (s *Storage) FindOneByID(eventID int32) (*storage.EventDTO, error) {
 		 user_id,
 		 start_date,
 		 end_date,
-		 notification_before
+		 notification_before,
+		 notification_is_sent
 		FROM
 		  event
 		WHERE
@@ -182,6 +183,7 @@ func (s *Storage) FindOneByID(eventID int32) (*storage.EventDTO, error) {
 	var title, description string
 	var id, userID, notificationBefore int32
 	var startDate, endDate time.Time
+	var notificationIsSent bool
 	err := row.Scan(
 		&id,
 		&title,
@@ -190,6 +192,7 @@ func (s *Storage) FindOneByID(eventID int32) (*storage.EventDTO, error) {
 		&startDate,
 		&endDate,
 		&notificationBefore,
+		&notificationIsSent,
 	)
 
 	if err == sql.ErrNoRows {
@@ -208,6 +211,7 @@ func (s *Storage) FindOneByID(eventID int32) (*storage.EventDTO, error) {
 		startDate,
 		endDate,
 		time.Duration(notificationBefore*1e9),
+		notificationIsSent,
 	), nil
 }
 
@@ -293,6 +297,7 @@ func (s *Storage) rowsToEvents(rows *sqlx.Rows) ([]*storage.EventDTO, error) {
 			startDate,
 			endDate,
 			time.Duration(notificationBefore*1e9),
+			false,
 		)
 		events = append(events, event)
 	}
