@@ -1,20 +1,8 @@
 package logger
 
-import "fmt"
-
-type Logger struct { // TODO
+type Logger interface {
+	Debug(msg string)
+	Info(msg string)
+	Warning(msg string)
+	Error(msg string)
 }
-
-func New(level string) *Logger {
-	return &Logger{}
-}
-
-func (l Logger) Info(msg string) {
-	fmt.Println(msg)
-}
-
-func (l Logger) Error(msg string) {
-	// TODO
-}
-
-// TODO
